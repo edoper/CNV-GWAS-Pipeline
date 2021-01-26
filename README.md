@@ -68,7 +68,7 @@ TBD
 ### CNV detection
 For CNV detection, we strongly recommend to follow the pipeline proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), which uses PennCNV to detect CNVs and R scripts for filtering. The pipeline describes how to install PennCNV, R, and the required R libraries to properly execute the R scripts. The pipeline requires a configuration file.
 ```
-###config_example.txt
+## config_example.txt
 pennCNVpath:    /path/to/pennCNV/
 HMMpath:	/path/to/pennCNV/lib/hhall.hmm
 HMMcreate:	0
@@ -94,18 +94,10 @@ Phenotype:	phenoName
 ./CNV_detection.sh config_example.txt
 ```
 The PennCNV Pipeline User Guide included in the pipeline describes the results, however, we'll focus on two files.
-- 
-- 
-There are two important
-ex1.rawcnv:
-The pennCNV raw CNVs without any ltering and merging.
-ex1.log:
-The log of the pennCNV calls.
-clean.rawcnv:
-The merged pennCNV raw CNVs.
-goodCNV.good.cnv:
-The merged and ltered CNVs in the pennCNV format.
-in which various CNV metrics are combined to estimate the probability of a called CNV to be a consensus call. 
+
+- clean.rawcnv contains the raw CNVs
+- goodCNV.good.cnv contains the filtered CNVs in PennCNV format
+
 ### Downstream analysis: Post-detection QCs.
 Usually, CNV detection is restricted to the autosomal chromosomes as the intensity analysis of probes mapping within the X and Y chromosome is less reliable.
 We can remove those chromosomes from the analysis with `grep -v "chrX"` and `grep -v "chrY"`.
@@ -125,7 +117,7 @@ with open(argv[1]) as f1:
 					print(i.strip())
 ```
 ```
-python cnvfilter.py mygwas.rawcnv > mygwas.filtered.rawcnv
+python cnvfilter.py goodCNV.good.cnv > mygwas.filtered.rawcnv
 ```
 
 An awk one-liner can be used to transform the data into UCSC BED format.
@@ -149,4 +141,3 @@ The annotation of the QC-passing CNVs is essential to extract significant biolog
 ### Sample-wise input.
 ### Binary CNV predictor
 ### Logistic regression
-test
