@@ -66,6 +66,46 @@ ggplot(data=testbed_merged_genoQC, aes(x=X3,y=X4,group=X23,color=X23)) + geom_po
 TBD
 ## Step 2. CNV detection and downstream analysis.
 ### CNV detection
+For CNV detection, we strongly recommend to follow the pipeline proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), which uses PennCNV to detect CNVs and R scripts for filtering. The pipeline describes how to install PennCNV, R, and the required R libraries to properly execute the R scripts. The pipeline requires a configuration file.
+```
+###config_example.txt
+pennCNVpath:    /path/to/pennCNV/
+HMMpath:	/path/to/pennCNV/lib/hhall.hmm
+HMMcreate:	0
+PFB:	/path/to/input/pfb/
+CompilePFB:	1
+GCmod:	my/GC_model/path
+UseGCmod:	0
+InputData:	1
+DATA:	/path/to/input/
+OUTPUT:	/path/to/output/results
+FormatedPath:	/path/to/input/formated
+Chromosome:	1-22
+CNVcall:	1
+Cleancall:	1
+format:	1
+CreateRfile:	1
+AssoData:	1
+NbCores:	16
+PhenoPath:	/path/to/input/phenotype/phenotype.txt
+Phenotype:	phenoName
+```
+```
+./CNV_detection.sh config_example.txt
+```
+The PennCNV Pipeline User Guide included in the pipeline describes the results, however, we'll focus on two files.
+- 
+- 
+There are two important
+ex1.rawcnv:
+The pennCNV raw CNVs without any ltering and merging.
+ex1.log:
+The log of the pennCNV calls.
+clean.rawcnv:
+The merged pennCNV raw CNVs.
+goodCNV.good.cnv:
+The merged and ltered CNVs in the pennCNV format.
+in which various CNV metrics are combined to estimate the probability of a called CNV to be a consensus call. 
 ### Downstream analysis: Post-detection QCs.
 Usually, CNV detection is restricted to the autosomal chromosomes as the intensity analysis of probes mapping within the X and Y chromosome is less reliable.
 We can remove those chromosomes from the analysis with `grep -v "chrX"` and `grep -v "chrY"`.
@@ -87,7 +127,7 @@ with open(argv[1]) as f1:
 ```
 python cnvfilter.py mygwas.rawcnv > mygwas.filtered.rawcnv
 ```
-After filtering, we strongly recommend to implement a quality score calculation for each CNV following the methods proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), in which various CNV metrics are combined to estimate the probability of a called CNV to be a consensus call. 
+
 An awk one-liner can be used to transform the data into UCSC BED format.
 ```
 less mygwas.filtered.rawcnv | awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t" > all-cnv.bed
