@@ -1,6 +1,6 @@
 # CNV-GWAS-Pipeline
 
-**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs in large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the "Genomic structural variants in nervous system disorders" chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
+**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs from large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"] chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
 
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
@@ -12,25 +12,25 @@
 - [R](https://www.r-project.org/)
 - [Python](https://www.python.org/)
 ## Step 1. Quality control procedures.
-For an extensive description of GWAS QC procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For the sake of simplicity, we asume that the input is on the standard PED and MAP file formats, which can be read by PLINK software.
+For a detailed description of GWAS quality control (QC) procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For simplicity, we asume that the input is on the standard PED and MAP file formats, which can be read by PLINK software.
 We will transform the original data into PLINK BED files **(do not confuse this with UCSC BED format)** to facilitate the analyses of large datasets.
-Remember to make backups of the original data. `plink --file <filename>` loads PED and MAP data. `plink --bfile <filename>` loads PLINK BED data.
+Remember to make backups of the original data. The command `plink --file <filename>` loads PED and MAP data. The command `plink --bfile <filename>` loads PLINK BED data.
 ```
 plink --file mygwas --make-bed --out mygwas
 ```
 With `(mygwas.map, mygwas.ped)` as the input, and `(mygwas.bed, mygwas.bim, mygwas.fam)` as the output.
 ### Genotype-level QCs
-It is assumed that discordant sex information between the reported and genotyped sex in individuals is a sign of poor genotyping. We will check if there are discrepancies in sex and remove those individuals.
+It is assumed that discordant sex information between the reported and genotyped sex in individuals is a sign of poor genotyping. The following command will check if there are discrepancies in sex and remove those individuals.
 ```
 plink --bfile mygwas --check-sex --out mygwas
 grep PROBLEM mygwas.sexcheck | awk '{print $1,$2}' > toremove.sexcheck.list
 ```
-PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test.
+PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test. Such a command states:
 ```
 plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
 ```
 ### Cohort-level QC
-Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree.
+Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify relted individuals in mygwas data.  
 ```
 ## UN = UNrelated
 king -b mygwas.genoQC.bed --related –degree 2 --prefix mygwas.king
@@ -44,18 +44,18 @@ To assess ancestry, we merge the dataset with another known dataset with clearly
 wget ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/release/20100804/ALL.2of4intersection.20100804.genotypes.vcf.gz
 ```
 1000 genomes data is on VCF format, we need to convert it to PLINK binary format, filter it, and merge it with the original dataset.
-Before merging, you need to make sure that the files are mergeable, for this there are three things that you need to keep in mind:
-1) The reference genome needs to be the same in the dataset and the 1000 genomes data.
+You need to make sure that the files are mergeable, for this there are three things that you need to keep in mind:
+1) The reference genome needs to be the same in your dataset and in the 1000 genomes data.
 2) Resolve strand isues.
 3) Remove the SNPs which still differ between the datasets.
 
-The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged.
+The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The below command will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
 ```
 plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict --allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
 plink --bfile mygwas.merged --pca --out mygwas.merged
 ```
-The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the ancestry of every individual is appended as the last column of the PCA results.
+The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the ancestry of every individual is appended as the last column of the PCA results. The below command in R will plot mygwas individuals alongside 1000 genomes samples. 
 ```
 library(readr)
 mygwas_merged <- read_table2("mygwas.merged.eigenvec", col_names = FALSE)
