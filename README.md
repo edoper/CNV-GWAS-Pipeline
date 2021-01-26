@@ -92,12 +92,18 @@ An awk one-liner can be used to transform the data into UCSC BED format.
 ```
 less mygwas.filtered.rawcnv | awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t" > all-cnv.bed
 ```
-False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, for this protocol we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools. A single line will exclude undesired CNVs:
+False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will exclude undesired CNVs:
 ```
 intersectBed -a all-cnv.bed -b repetitive-regions.bed -v > all-cnv.filtered.bed
 ```
 ### Downstream analysis: Annotation
-The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. The filtered `all-cnv.filtered.bed` UCSC BED file can be directly uploaded to Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP). However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all RefSeq genes (see RefSeq Genes BED file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+
+
+
+
+
+
 ## Step 3. Burden analysis.
 ### Concept
 ### Sample-wise input.
