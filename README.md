@@ -1,6 +1,7 @@
 # CNV-GWAS-Pipeline
 
-**CNV GWAS pipeline** is a gold standard pipeline for the discovery of Copy Number Variants (CNV) in large genotyping datasets.
+**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs in large genotyping datasets. We describe established CNV quality control procedures, case-control burden analysis. The present GitHub repository is associated to the Genomic structural variants in nervous system disorders chapter by Eduardo Pérez-Palma et al from the book series Neuromethods (2021).
+
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
 - [KING](http://people.virginia.edu/~wc9c/KING/)
