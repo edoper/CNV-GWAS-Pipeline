@@ -92,7 +92,7 @@ An awk one-liner can be used to transform the data into UCSC BED format.
 ```
 less mygwas.filtered.rawcnv | awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t" > all-cnv.bed
 ```
-False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, if the unwanted regions are in UCSC BED format.
+False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, if the [unwanted regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) are in UCSC BED format.
 ```
 intersectBed -a all-cnv.bed -b filterregions.bed -v > all-cnv.filtered.bed
 ```
