@@ -84,10 +84,13 @@ with open(argv[1]) as f1:
 				if (probes/distance) > 0.0001:
 					print(i.strip())
 ```
-After filtering, we strongly recommend to implement a quality score calculation for each CNV following the methods proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), in which various CNV metrics are combined to estimate the probability of a called CNV to be a consensus call. 
-A similar script can be used to transform the data into UCSC BED format.
 ```
-awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t"
+python cnvfilter.py mygwas.rawcnv > mygwas.filtered.rawcnv
+```
+After filtering, we strongly recommend to implement a quality score calculation for each CNV following the methods proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), in which various CNV metrics are combined to estimate the probability of a called CNV to be a consensus call. 
+An awk one-liner can be used to transform the data into UCSC BED format.
+```
+less mygwas.filtered.rawcnv | awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t" > all-cnv.bed
 ```
 False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, if the unwanted regions are in UCSC BED format.
 ```
