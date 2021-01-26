@@ -1,6 +1,6 @@
 # CNV-GWAS-Pipeline
 
-**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs in large genotyping datasets. We describe established CNV quality control procedures and case-control burden analysis. The present GitHub repository is associated to the Genomic structural variants in nervous system disorders chapter by Eduardo Pérez-Palma et al from the book series Neuromethods (2021).
+**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs in large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the "Genomic structural variants in nervous system disorders" chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
 
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
@@ -12,7 +12,7 @@
 - [R](https://www.r-project.org/)
 - [Python](https://www.python.org/)
 ## Step 1. Quality control procedures.
-The format of genotyping data varies among SNP platforms. For the sake of simplicity, we asume that the input is on the standard PED and MAP file formats, which can be read by PLINK.
+For an extensive description of GWAS QC procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For the sake of simplicity, we asume that the input is on the standard PED and MAP file formats, which can be read by PLINK software.
 We will transform the original data into PLINK BED files **(do not confuse this with UCSC BED format)** to facilitate the analyses of large datasets.
 Remember to make backups of the original data. `plink --file <filename>` loads PED and MAP data. `plink --bfile <filename>` loads PLINK BED data.
 ```
