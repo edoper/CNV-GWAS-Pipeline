@@ -1,7 +1,6 @@
 # CNV-GWAS-Pipeline
 
-# CNVpipeline
-**CNVpipeline** is a gold standard pipeline for the discovery of Copy Number Variants (CNV) in large genotyping datasets.
+**CNV GWAS pipeline** is a gold standard pipeline for the discovery of Copy Number Variants (CNV) in large genotyping datasets.
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
 - [KING](http://people.virginia.edu/~wc9c/KING/)
