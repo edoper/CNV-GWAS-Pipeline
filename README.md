@@ -93,7 +93,7 @@ Phenotype:	phenoName
 ```
 ./CNV_detection.sh config_example.txt
 ```
-The PennCNV Pipeline User Guide included in the pipeline describes the results, however, we'll focus on two files.
+The PennCNV Pipeline User Guide included in the pipeline describes the output, however, we will require two files to continue with the current pipeline:
 
 - clean.rawcnv contains the raw CNVs
 - goodCNV.good.cnv contains the filtered CNVs in PennCNV format
