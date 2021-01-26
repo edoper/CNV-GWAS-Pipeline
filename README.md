@@ -92,9 +92,9 @@ An awk one-liner can be used to transform the data into UCSC BED format.
 ```
 less mygwas.filtered.rawcnv | awk '{print $1}' | awk -F":|-" '{print $1,$2,$3}' OFS="\t" > all-cnv.bed
 ```
-False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, if the [unwanted regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) are in UCSC BED format.
+False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions and calls overlapping the boundaries of repetitive regions should be removed. This step can be done with bedtools, for this protocol we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools. A single line will exclude undesired CNVs:
 ```
-intersectBed -a all-cnv.bed -b filterregions.bed -v > all-cnv.filtered.bed
+intersectBed -a all-cnv.bed -b repetitive-regions.bed -v > all-cnv.filtered.bed
 ```
 ### Downstream analysis: Annotation
 The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. The filtered `all-cnv.filtered.bed` UCSC BED file can be directly uploaded to Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP). However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
