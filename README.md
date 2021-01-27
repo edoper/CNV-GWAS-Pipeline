@@ -185,7 +185,7 @@ perl -pi -e 's/\t\n/\t0\n/g' sample.wise.input
 The final sample wise input shoudl look like 
 
 Sample | RESPONSE | Sex | PC1 | PC2 | PC3 | PREDICTOR
----	---	---	---	---	---	---
+--- | --- | --- | --- | --- | --- | ---
 NA06984 | 0 | 1 | 158123 | 391066 | 139324 | 1
 NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
