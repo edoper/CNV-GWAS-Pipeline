@@ -96,7 +96,14 @@ Phenotype:	phenoName
 The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two files:
 
 - mygwas.clean.rawcnv contains the ALL detected CNVs
-- mygwas.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis. 
+- mygwas.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis.
+
+Here an example of the PennCNV calls output:
+Genomic coordinates	N SNPs	Lenght	Copy number (Del=0/1;Dup=3/4)	Sample	Begin	End
+---	---	---	---	---	---	---
+chr1:25593128-25611452	numsnp=14	length=18,325	state1,cn=0	NA19222	startsnp=CN_482242	endsnp=CN_020771
+chr1:72771143-72811148	numsnp=44	length=40,006	state1,cn=0	NA21596	startsnp=CN_517829	endsnp=CN_519942
+chr1:152555795-152586594	numsnp=33	length=30,800	state1,cn=0	NA20787	startsnp=CN_452251	endsnp=CN_453516
 
 ### Downstream analysis: Post-detection QCs.
 Usually, CNV detection is restricted to the autosomal chromosomes as the intensity analysis of probes mapping within the X and Y chromosome is less reliable.
