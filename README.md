@@ -165,7 +165,6 @@ To annotate regions of interest you might take advantage of the refseq.genes.bed
 ```
 awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | sort -V -k1,2 >regions.of.interest.bed
 bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | awk '{print $4"\t1"}' | sort | uniq >mysamples.w.predictor
-
 ```
 
 ## Step 3. Burden analysis.
@@ -178,10 +177,17 @@ To carry out a burden analysis you need two variables for every sample included 
 2. PREDICTOR: binary precdictor, in this case if a sample has or not a CNV overlapping a region of interest. we will use mysamples.w.predictor to create the PREDICTOR field.  
 3. COVARIABLES (optional): Here you can inlcude sex or principal components.
 
-These three variables are contained in a Sample-wise-iput file. While RESPONSE and COVARIABLES were extracted from STEP1 (mysamples file) the PREDICTOR needs to be construted.
+RESPONSE and COVARIABLES were extracted from STEP1 (mysamples file). Here, the PREDICTOR needs to be construted. we simply add a mock negative PREDICTOR column and then map the true value with the file mysamples.w.predictor generated in the previous step.
+```
+awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$1]=$2;next}{print $0, p[$1]}' mysamples.w.predictor mysamples >sample.wise.input
+perl -pi -e 's/\t\n/\t0\n/g' sample.wise.input
+```
+The final sample wise input shoudl look like 
 
-
-
-
+Sample | RESPONSE | Sex | PC1 | PC2 | PC3 | PREDICTOR
+---	---	---	---	---	---	---
+NA06984 | 0 | 1 | 158123 | 391066 | 139324 | 1
+NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
+NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
 
 ### Logistic regression
