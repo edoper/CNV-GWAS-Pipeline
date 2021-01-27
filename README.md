@@ -155,18 +155,38 @@ bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | \
 awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
 cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
 ```
+
 The expected output should look like the table below: 
 
 Chr | Start | End | Sample | N genes | Gene Names
 --- | --- | --- | --- | --- | --- | 
-1 | 13375345 | 13471945 | NA18976 | 1 | PRAMEF13
-1 | 13375345 | 13506877 | NA19334 | 1 | PRAMEF13
 1 | 14879491 | 14951408 | NA20760 | 1 | KAZN
 1 | 15718470 | 15789733 | NA21304 | 3 | CTRC,EFHD2,CELA2A
 1 | 15894607 | 16000741 | NA18534 | 4 | RSC1A1,AGMAT,DNAJC16,DDI2
 
+To annotate regions of interest you might take advantage of the refseq.genes.bed file to generate a regions.of.interest.bed file. For this example we will as "regions of interest" a list of 279 coding genes (gene.set.list) known to be associated to developmental disorders. Next you can interrogate is any CNVs are overlapping these regions and generate a mysamples.w.predictor list.  
+```
+awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | /
+sort -V -k1,2 >regions.of.interest.bed
+bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | /
+awk '{print $4"\t1"}' >mysamples.w.predictor
+
+```
+
 ## Step 3. Burden analysis.
+
 ### Concept
-### Sample-wise input.
-### Binary CNV predictor
+CNV burden analysis is a hypothesis-driven approach that requires the definition of at least one region of interest. A region of interest can be any genomic interval defined by the user, and usually takes the form of a gene set. Gene sets should be meaningful to the disease to extract valuable conclusions. There is no restriction in the type or number of regions that can be tested. 
+### Input.
+To carry out a burden analysis you need two variables for every sample included in the gwas:
+1. RESPONSE: binary phenotype (cases=1; controls=0) in all PostQC gwas samples regardless of their cnv state.
+2. PREDICTOR: binary precdictor, in this case if a sample has or not a CNV overlapping a region of interest. we will use mysamples.w.predictor to create the PREDICTOR field.  
+3. COVARIABLES (optional): Here you can inlcude sex or principal components.
+
+These three variables are contained in a Sample-wise-iput file. While RESPONSE and COVARIABLES were extracted from STEP1 (mysamples file) the PREDICTOR needs to be construted.    
+
+
+
+
+
 ### Logistic regression
