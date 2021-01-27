@@ -149,7 +149,8 @@ Chr | Start | End | Sample
 ### Downstream analysis: Annotation
 The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see refseq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
 ```
-bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
+bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | \
+awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
 cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
 ```
 The expected output should look like the table below: 
