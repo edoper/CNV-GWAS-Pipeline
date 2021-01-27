@@ -95,8 +95,8 @@ Phenotype:	phenoName
 ```
 The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two files:
 
-- clean.rawcnv contains the ALL detected CNVs
-- goodCNV.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis. 
+- mygwas.clean.rawcnv contains the ALL detected CNVs
+- mygwas.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis. 
 
 ### Downstream analysis: Post-detection QCs.
 Usually, CNV detection is restricted to the autosomal chromosomes as the intensity analysis of probes mapping within the X and Y chromosome is less reliable.
@@ -117,20 +117,27 @@ with open(argv[1]) as f1:
 					print(i.strip())
 ```
 ```
-python cnvfilter.py goodCNV.good.cnv > mygwas.filtered.rawcnv
+python cnvfilter.py mygwas.good.cnv >mygwas.good.filtered.cnv
 ```
-
 Next to remove custom regions we need a bed version of our CNV calls. An awk one-liner can be used to transform the data into UCSC BED format.
 ```
-less mygwas.filtered.rawcnv | awk '{print $1"\t"$5}' | perl -pe 's/:|-/\t/g' >all-cnv.bed
-perl -pi -e 's/\Achr//g'
-sort -V -k1,2 all-cnv.bed >all-cnv-sorted.bed
+less mygwas.good.filtered.cnv | awk '{print $1"\t"$5}' | perl -pe 's/:|-/\t/g' >mygwas.good.filtered.cnv.bed
+perl -pi -e 's/\Achr//g' mygwas.good.filtered.cnv.bed
+sort -V -k1,2 mygwas.good.filtered.cnv.bed >mygwas.good.filtered.cnv.sorted.bed
 ```
 False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions. Calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will exclude undesired CNVs:
 ```
-intersectBed -a all-cnv-sorted.bed -b repetitive-regions.bed -v >all-cnv.filtered.bed
+intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive-regions.bed -v >mycnv-final.bed
 ```
-This way we obtain our final set of CNV calls all-cnv.filtered.bed
+This way we obtain our final set of CNV calls mycnv-final.bed. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv.  See example below:
+
+mycnv-final.bed first three rows: 
+
+Chr | Start | End | Sample
+--- | --- | --- | ---
+1 | 61735 | 235938 | NA07435
+1 | 61735 | 235938 | NA11839
+1 | 61735 | 235938 | NA12348
 
 ### Downstream analysis: Annotation
 The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see RefSeq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
