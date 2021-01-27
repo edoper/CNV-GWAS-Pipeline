@@ -27,8 +27,7 @@ grep PROBLEM mygwas.sexcheck | awk '{print $1,$2}' > toremove.sexcheck.list
 ```
 PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test. Such a command states:
 ```
-plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 \
-	--maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
+plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
 ```
 ### Cohort-level QC
 Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify relted individuals in mygwas data.  
@@ -52,8 +51,7 @@ You need to make sure that the files are mergeable, for this there are three thi
 
 The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The below command will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
 ```
-plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict \ 
-	--allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
+plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict --allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
 plink --bfile mygwas.merged --pca --out mygwas.merged
 ```
@@ -151,8 +149,7 @@ Chr | Start | End | Sample
 ### Downstream analysis: Annotation
 The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see refseq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
 ```
-bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | \
-awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
+bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
 cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
 ```
 
@@ -166,10 +163,8 @@ Chr | Start | End | Sample | N genes | Gene Names
 
 To annotate regions of interest you might take advantage of the refseq.genes.bed file to generate a regions.of.interest.bed file. For this example we will as "regions of interest" a list of 279 coding genes (gene.set.list) known to be associated to developmental disorders. Next you can interrogate is any CNVs are overlapping these regions and generate a mysamples.w.predictor list.  
 ```
-awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | /
-sort -V -k1,2 >regions.of.interest.bed
-bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | /
-awk '{print $4"\t1"}' >mysamples.w.predictor
+awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | sort -V -k1,2 >regions.of.interest.bed
+bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | awk '{print $4"\t1"}' | sort | uniq >mysamples.w.predictor
 
 ```
 
@@ -183,7 +178,7 @@ To carry out a burden analysis you need two variables for every sample included 
 2. PREDICTOR: binary precdictor, in this case if a sample has or not a CNV overlapping a region of interest. we will use mysamples.w.predictor to create the PREDICTOR field.  
 3. COVARIABLES (optional): Here you can inlcude sex or principal components.
 
-These three variables are contained in a Sample-wise-iput file. While RESPONSE and COVARIABLES were extracted from STEP1 (mysamples file) the PREDICTOR needs to be construted.    
+These three variables are contained in a Sample-wise-iput file. While RESPONSE and COVARIABLES were extracted from STEP1 (mysamples file) the PREDICTOR needs to be construted.
 
 
 
