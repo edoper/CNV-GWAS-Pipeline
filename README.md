@@ -93,10 +93,10 @@ Phenotype:	phenoName
 ```
 ./CNV_detection.sh config_example.txt
 ```
-The PennCNV Pipeline User Guide included in the pipeline describes the output, however, we will require two files to continue with the current pipeline:
+The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two files:
 
-- clean.rawcnv contains the raw CNVs
-- goodCNV.good.cnv contains the filtered CNVs in PennCNV format
+- clean.rawcnv contains the ALL detected CNVs
+- goodCNV.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis. 
 
 ### Downstream analysis: Post-detection QCs.
 Usually, CNV detection is restricted to the autosomal chromosomes as the intensity analysis of probes mapping within the X and Y chromosome is less reliable.
