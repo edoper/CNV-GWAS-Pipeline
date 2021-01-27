@@ -51,7 +51,8 @@ You need to make sure that the files are mergeable, for this there are three thi
 
 The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The below command will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
 ```
-plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict --allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
+plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict \ 
+	--allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
 plink --bfile mygwas.merged --pca --out mygwas.merged
 ```
