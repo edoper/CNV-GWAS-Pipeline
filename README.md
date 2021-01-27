@@ -55,12 +55,36 @@ plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only stri
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
 plink --bfile mygwas.merged --pca --out mygwas.merged
 ```
-The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the ancestry of every individual is appended as the last column of the PCA results. The below command in R will plot mygwas individuals alongside 1000 genomes samples. 
+The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the ancestry of every individual is appended as the last column of the PCA results. The command below in R will plot mygwas individuals alongside 1000 genomes samples. 
 ```
 library(readr)
 mygwas_merged <- read_table2("mygwas.merged.eigenvec", col_names = FALSE)
 library("ggplot2")
 ggplot(data=testbed_merged_genoQC, aes(x=X3,y=X4,group=X23,color=X23)) + geom_point()
+```
+After filtering outliers, we will require a table with the individual ID, phenotype, sex, and the first three components from the PCA.
+The following Python script can be used to generate this table, with the PLINK fam file and the PLINK eigenvec file as input.
+```
+## Save as pcatablebuilder.py
+## Usage: python pcatablebuilder.py <fam indlist> <PCA results.eigenvec>
+
+from sys import argv
+print("SampleID	Response	Sex	PC1	PC2	PC3")
+
+with open(argv[1]) as f1:
+	for i in f1:
+		splitfirst = i.strip().split()
+		
+		with open(argv[2]) as f2:
+			for j in f2:
+				splitsecond = j.strip().split()
+				if splitfirst[1] == splitsecond[1]:
+					joined = "	".join(splitfirst[1],splitfirst[-1],splitfirst[-2],splitsecond[2],splitsecond[3],splitsecond[4])
+					print(joined)
+
+```
+```
+python pcatablebuilder.py mygwas.fam mygwas.merged.eigenvec > mygwas.burdentable
 ```
 ### Intensity-level QCs
 TBD
@@ -185,7 +209,7 @@ perl -pi -e 's/\t\n/\t0\n/g' sample.wise.input
 The final sample wise input shoudl look like 
 
 Sample | RESPONSE | Sex | PC1 | PC2 | PC3 | PREDICTOR
---- | --- | --- | --- | --- | --- | ---
+---	---	---	---	---	---	---
 NA06984 | 0 | 1 | 158123 | 391066 | 139324 | 1
 NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
