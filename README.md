@@ -1,6 +1,6 @@
 # CNV-GWAS-Pipeline
 
-**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs from large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
+**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs from large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
 
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
