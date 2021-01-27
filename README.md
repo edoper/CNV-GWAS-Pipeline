@@ -151,9 +151,6 @@ The annotation of the QC-passing CNVs is essential to extract significant biolog
 
 
 
-
-
-
 ## Step 3. Burden analysis.
 ### Concept
 ### Sample-wise input.
