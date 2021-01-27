@@ -134,7 +134,7 @@ sort -V -k1,2 mygwas.good.filtered.cnv.bed >mygwas.good.filtered.cnv.sorted.bed
 ```
 False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions. Calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will exclude undesired CNVs:
 ```
-intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive-regions.bed -v >mycnv-final.bed
+intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive-regions.bed -v >mycnvs.final.bed
 ```
 This way we obtain our final set of CNV calls mycnv-final.bed. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv.  See example below:
 
@@ -147,9 +147,20 @@ Chr | Start | End | Sample
 1 | 61735 | 235938 | NA12348
 
 ### Downstream analysis: Annotation
-The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see RefSeq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see refseq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+```
+bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
+cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
+```
+The expected output should look like the table below: 
 
-
+Chr | Start | End | Sample | N genes | Gene Names
+--- | --- | --- | --- | --- | --- | 
+1 | 13375345 | 13471945 | NA18976 | 1 | PRAMEF13
+1 | 13375345 | 13506877 | NA19334 | 1 | PRAMEF13
+1 | 14879491 | 14951408 | NA20760 | 1 | KAZN
+1 | 15718470 | 15789733 | NA21304 | 3 | CTRC,EFHD2,CELA2A
+1 | 15894607 | 16000741 | NA18534 | 4 | RSC1A1,AGMAT,DNAJC16,DDI2
 
 ## Step 3. Burden analysis.
 ### Concept
