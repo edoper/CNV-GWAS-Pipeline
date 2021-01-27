@@ -27,7 +27,8 @@ grep PROBLEM mygwas.sexcheck | awk '{print $1,$2}' > toremove.sexcheck.list
 ```
 PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test. Such a command states:
 ```
-plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
+plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 \
+	--maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
 ```
 ### Cohort-level QC
 Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify relted individuals in mygwas data.  
