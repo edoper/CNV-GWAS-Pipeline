@@ -3,13 +3,13 @@
 **CNV GWAS pipeline** describes a workflow to detect and analyze CNVs out of large scale microarray-based genotype data. Based on an hypothetical case-control genome wide association (*mygwas.ped* and *mygwas.map*) we describe established CNV quality control procedures and guidelines for CNV detection. In additon, we include example data (i.e. *mygwas.good.cnv*) to carry out CNV downstream analysis and test for association with a CNV burden analysis. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
 
 ## Files
-0. *mygwas* (NOT INCLUDED)	genotype in PLINK format (mygwas.ped and mygwas.map) and sample-wise microarray intensity files.  
-1. *mygwas.good.cnv*		Examples CNVs calls from PennCNV.
-2. *mysamples*			All samples included in the study.
-3. *refseq.genes.bed*		All RefSeq genes.
-4. *geneset.list*		genes of interest.
-5. *repetitive.regions.bed*	list of genomic repetetitive regions (e.g. centromere, telomere).
-6. Expected-output/		Folder containg all intermediate files. 
+0. *mygwas* (NOT INCLUDED): genotype in PLINK format (mygwas.ped and mygwas.map) and sample-wise microarray intensity files.  
+1. *mygwas.good.cnv*: Examples CNVs calls from PennCNV.
+2. *mysamples*: All samples included in the study.
+3. *refseq.genes.bed*: All RefSeq genes.
+4. *geneset.list*: genes of interest.
+5. *repetitive.regions.bed*: list of genomic repetetitive regions (e.g. centromere, telomere).
+6. Expected-output/: Folder containg all intermediate files. 
 
 ## Dependencies
 1. [PLINK 1.9](https://www.cog-genomics.org/plink2)
