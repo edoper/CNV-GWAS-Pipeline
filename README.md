@@ -242,8 +242,8 @@ main.results
 ```
 Expected results should look like the tabe below: 
 
-Variables | p.model | OR | 2.5 | % | 97.5 | %
---- | --- | --- | --- | --- | ---  | ---
+Variables | p.model | OR | 2.5 % | 97.5 %
+--- | --- | --- | --- | --- 
 (Intercept) | 5.339691e-19 | 0.6600314 | 0.5455037 | 0.7971419
 PREDICTOR | 5.339691e-19 | 2.9084473 | 2.3352957 | 3.6305632
 Sex | 5.339691e-19 | 0.9552320 | 0.7683386 | 1.1873764
