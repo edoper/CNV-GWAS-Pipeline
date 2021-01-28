@@ -256,5 +256,6 @@ PC3 | 5.339691e-19 | 0.9999999 | 0.9999996 | 1.0000002
 If you are able to obtain the above table, Congratulations! you have just carried out a CNV burden analysis based on microarray GWAS data. In our example, there is significant association between the phenotype of our cases and CNVs overlapping genes associated to developmental disorders. In other words, the burden of patients with CNVs overlapping genes associated to developmental disorders is significantly higher than the one observed in controls.
 
 Thank you!
+
 *Disclaimer: The data presented here are for educational purpuses only and does not represent real results or association*.
 
