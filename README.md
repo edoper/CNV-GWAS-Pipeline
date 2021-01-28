@@ -210,7 +210,7 @@ perl -pi -e 's/\t\n/\t0\n/g' sample.wise.input
 The final sample wise input shoudl look like 
 
 Sample | RESPONSE | Sex | PC1 | PC2 | PC3 | PREDICTOR
----	---	---	---	---	---	---
+--- | --- | --- | --- | --- | --- | ---
 NA06984 | 0 | 1 | 158123 | 391066 | 139324 | 1
 NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
@@ -243,7 +243,7 @@ main.results
 Expected results should look like the tabe below: 
 
 Variables | p.model | OR | 2.5 | % | 97.5 | %
---- | --- | --- | --- | --- | ---
+--- | --- | --- | --- | --- | ---  | ---
 (Intercept) | 5.339691e-19 | 0.6600314 | 0.5455037 | 0.7971419
 PREDICTOR | 5.339691e-19 | 2.9084473 | 2.3352957 | 3.6305632
 Sex | 5.339691e-19 | 0.9552320 | 0.7683386 | 1.1873764
