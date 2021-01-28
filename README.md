@@ -1,6 +1,6 @@
 # CNV-GWAS-Pipeline
 
-**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs from large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
+**CNV GWAS pipeline** describes a gold standard workflow to detect and analyze CNVs from large genome wide association studies (GWAS). We describe established CNV quality control procedures and case-control burden analysis for genotyping data. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021). *Disclaimer: The data presented here is for educational purpuses only and does not represent real results or association*.   
 
 ## Dependencies
 - [PLINK 1.9](https://www.cog-genomics.org/plink2)
@@ -84,10 +84,9 @@ with open(argv[1]) as f1:
 
 ```
 ```
-python pcatablebuilder.py mygwas.fam mygwas.merged.eigenvec > mygwas.burdentable
+python pcatablebuilder.py mygwas.fam mygwas.merged.eigenvec > mysamples
 ```
-### Intensity-level QCs
-TBD
+
 ## Step 2. CNV detection and downstream analysis.
 ### CNV detection
 For CNV detection, we strongly recommend to follow the pipeline proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), which uses PennCNV to detect CNVs and R scripts for filtering. The pipeline describes how to install PennCNV, R, and the required R libraries to properly execute the R scripts. The pipeline requires a configuration file.
@@ -171,12 +170,11 @@ Chr | Start | End | Sample
 1 | 61735 | 235938 | NA12348
 
 ### Downstream analysis: Annotation
-The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see refseq.genes.bed file). For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+The annotation of the QC-passing CNVs is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes (see refseq.genes.bed file).
 ```
 bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
 cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
 ```
-
 The expected output should look like the table below: 
 
 Chr | Start | End | Sample | N genes | Gene Names
@@ -185,18 +183,21 @@ Chr | Start | End | Sample | N genes | Gene Names
 1 | 15718470 | 15789733 | NA21304 | 3 | CTRC,EFHD2,CELA2A
 1 | 15894607 | 16000741 | NA18534 | 4 | RSC1A1,AGMAT,DNAJC16,DDI2
 
+For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+
+## Step 3. Burden analysis.
+
+### Regions of Interest (or genes of interest)
+CNV burden analysis is a hypothesis-driven approach that requires the definition of at least one region of interest. A region of interest can be any genomic interval defined by the user, and usually takes the form of a gene set. Gene sets should be meaningful to the disease to extract valuable conclusions. There is no restriction in the type or number of regions that can be tested. 
+
 To annotate regions of interest you might take advantage of the refseq.genes.bed file to generate a regions.of.interest.bed file. For this example we will as "regions of interest" a list of 279 coding genes (gene.set.list) known to be associated to developmental disorders. Next you can interrogate is any CNVs are overlapping these regions and generate a mysamples.w.predictor list.  
 ```
 awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | sort -V -k1,2 >regions.of.interest.bed
 bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | awk '{print $4"\t1"}' | sort | uniq >mysamples.w.predictor
 ```
 
-## Step 3. Burden analysis.
-
-### Concept
-CNV burden analysis is a hypothesis-driven approach that requires the definition of at least one region of interest. A region of interest can be any genomic interval defined by the user, and usually takes the form of a gene set. Gene sets should be meaningful to the disease to extract valuable conclusions. There is no restriction in the type or number of regions that can be tested. 
 ### Input.
-To carry out a burden analysis you need two variables for every sample included in the gwas:
+To carry out a burden analysis you need three variables for every sample included in the gwas:
 1. RESPONSE: binary phenotype (cases=1; controls=0) in all PostQC gwas samples regardless of their cnv state.
 2. PREDICTOR: binary precdictor, in this case if a sample has or not a CNV overlapping a region of interest. we will use mysamples.w.predictor to create the PREDICTOR field.  
 3. COVARIABLES (optional): Here you can inlcude sex or principal components.
@@ -215,3 +216,41 @@ NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
 
 ### Logistic regression
+Having sample.wise.input with PREDICTOR annotatated the user can proceed with the logistic regression of the burden analysis. The following commands will test for association between the RESPONSE (i.e. phenotype) and the PREDICTOR (i.e. having a CNV in a region on interest). 
+
+```
+#load libraries
+library(aod)
+library(Rcpp)
+library(MASS)
+
+#load data
+data.cnv <- read.table("sample.wise.input", header=T)
+
+#model 
+model.burden <- glm(RESPONSE ~ PREDICTOR + Sex + PC1 +PC2 +PC3, data=data.cnv, family=binomial)
+
+#data extraction
+sum.mod <- summary(model.burden)
+sum.tab <-sum.mod$coefficients
+p.mod<-with(model.burden, pchisq(null.deviance - deviance, df.null - df.residual, lower.tail = FALSE))
+or.ci.mod<-exp(cbind(OR = coef(model.burden), confint(model.burden)))
+
+#results
+main.results<-cbind(p.mod, or.ci.mod)
+main.results
+```
+Expected results should look like the tabe below: 
+
+Variables | p.model | OR | 2.5 | % | 97.5 | %
+--- | --- | --- | --- | --- | ---
+(Intercept) | 5.339691e-19 | 0.6600314 | 0.5455037 | 0.7971419
+PREDICTOR | 5.339691e-19 | 2.9084473 | 2.3352957 | 3.6305632
+Sex | 5.339691e-19 | 0.9552320 | 0.7683386 | 1.1873764
+PC1 | 5.339691e-19 | 1.0000002 | 0.9999998 | 1.0000007
+PC2 | 5.339691e-19 | 1.0000001 | 0.9999998 | 1.0000004
+PC3 | 5.339691e-19 | 0.9999999 | 0.9999996 | 1.0000002
+
+If you are able to obtain the above table, Congratulations! you have just carried out a CNV burden analysis based on GWAS data. In our example, there is significant association between the phenotype of our cases and CNVs overlapping genes associated to developmental disorders. In other words, the burden of patients with CNVs overlapping genes associated to developmental disorders is significantly higher than the one observed in controls.
+
+Thank you!
