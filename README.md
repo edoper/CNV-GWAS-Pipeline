@@ -25,24 +25,24 @@
 For a detailed description of microarray-based GWAS quality control (QC) procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For simplicity, we asume data comes in standard PED and MAP PLINK file formats. Our example dataset is an hypotetical GWAS called my *mygwas* and composed of 1397 individuals (714 Cases and 683 Controls). 
 
 ### Genotype-level QCs
-We will transform the original data into PLINK BED files **(do not confuse this with UCSC BED format)** to facilitate the analyses of large datasets. It is assumed that discordant sex information between the reported and genotyped sex in individuals is a sign of poor genotyping. The following command will check if there are discrepancies in sex and remove those individuals.
+We will transform the original data into PLINK BED files **(do not confuse this with UCSC BED format)** to facilitate the analyses of large datasets. It is assumed that discordant sex information between the reported and genotyped sex in individuals is a sign of poor genotyping. The following command will transform ped and map files into binary PLINK format and check if there are discrepancies in sex and remove those individuals.
 ```
 plink --file mygwas --make-bed --out mygwas
 plink --bfile mygwas --check-sex --out mygwas
 grep PROBLEM mygwas.sexcheck | awk '{print $1,$2}' > toremove.sexcheck.list
 ```
-PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test. See below the command:
+PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test, by executing the following command:
 ```
 plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
 ```
 ### Cohort-level QC
-Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING software will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify relted individuals in *mygwas* data.  
+Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING software will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify related individuals in *mygwas* data.  
 ```
 ## UN = UNrelated
 king -b mygwas.genoQC.bed --related –degree 2 --prefix mygwas.king
 grep -v UN mygwas.king.kin0 | awk '{print $1,$2,$3}' > mygwas.related.list
 ```
-If related individuals are found, check their genotype call rates (`--missing`) and remove the individual with less calling rates.
+If related individuals are found, check their genotype call rates (`--missing` flag on PLINK) and remove the individual with less calling rates.
 
 To assess ancestry, we merge the dataset with another known dataset with clearly-defined populations(`--merge` for non-binary format PLINK files, `--bmerge` for binary format PLINK files), and use PLINK to generate a Principal components analysis (PCA) of the different populations. [1000 genomes](https://www.internationalgenome.org/) is usually used to check for population stratification data.
 ```
@@ -55,7 +55,7 @@ You need to make sure that the files are mergeable, for this there are three thi
 2) Resolve strand isues.
 3) Remove the SNPs which still differ between the datasets.
 
-The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The below command will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
+The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The command below will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
 ```
 plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict --allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
@@ -122,7 +122,7 @@ Then to execute the CNV detection:
 ```
 ./CNV_detection.sh config_example.txt
 ```
-The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two outputfiles:
+The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two output files:
 
 - mygwas.clean.rawcnv contains all the detected CNVs in PennCNV format. 
 - mygwas.good.cnv contains only the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis.
@@ -154,17 +154,17 @@ with open(argv[1]) as f1:
 ```
 python cnvfilter.py mygwas.good.cnv >mygwas.good.filtered.cnv
 ```
-Next to remove custom or repetitive regions we need a BED version of our CNV calls. three simple bash commands can be used to transform the data into a proper UCSC BED format.
+Next to remove custom or repetitive regions we need a BED version of our CNV calls. Three simple bash commands can be used to transform the data into UCSC BED format.
 ```
 less mygwas.good.filtered.cnv | awk '{print $1"\t"$5}' | perl -pe 's/:|-/\t/g' >mygwas.good.filtered.cnv.bed
 perl -pi -e 's/\Achr//g' mygwas.good.filtered.cnv.bed
 sort -V -k1,2 mygwas.good.filtered.cnv.bed >mygwas.good.filtered.cnv.sorted.bed
 ```
-False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions. Calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will exclude undesired CNVs:
+False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions. Calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will remove undesired CNVs:
 ```
 intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive.regions.bed -v >mycnvs.final.bed
 ```
-This way we obtain our final set of CNV calls *mycnv-final.bed*. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv. See below *mycnv-final.bed* first three rows: 
+This way we obtain our final set of CNV calls *mycnv.final.bed*. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv. See below *mycnv.final.bed* first three rows: 
 
 Chr | Start | End | Sample
 --- | --- | --- | ---
@@ -173,7 +173,7 @@ Chr | Start | End | Sample
 1 | 61735 | 235938 | NA12348
 
 ### Downstream analysis: Annotation
-The annotation of the *mycnv-final.bed* is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes using bedtools (see refseq.genes.bed file).
+The annotation of the *mycnv.final.bed* is essential to extract significant biological knowledge from a case-control cohort. For simplicity in this example we will annotate all canonical RefSeq genes using bedtools (see refseq.genes.bed file).
 ```
 bedtools intersect -a mycnvs.final.bed -b refseq.genes.bed -wa -wb | awk -F"\t" 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$8}' >mycnvs.intersected
 cat mycnvs.intersected | bedtools groupby -g 1,2,3,4 -c 5 -o count,collapse >mycnvs.annotated
@@ -186,13 +186,13 @@ Chr | Start | End | Sample | N genes | Gene Names
 1 | 15718470 | 15789733 | NA21304 | 3 | CTRC,EFHD2,CELA2A
 1 | 15894607 | 16000741 | NA18534 | 4 | RSC1A1,AGMAT,DNAJC16,DDI2
 
-For further annotations, you can directly upload the filtered *all-cnv.filtered.bed* BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) or [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) to annotate all relevant biological features. For larger annotation procedures local VEP or ANNOVAR installation are recommended.
+For further annotations, you can directly upload the filtered *mycnv.final.bed* BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) or [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) to annotate all relevant biological features. For larger annotation procedures local VEP or ANNOVAR installation are recommended.
 
 ## Step 3. Burden analysis.
 
 ### Regions of Interest (or genes of interest)
 CNV burden analysis is a hypothesis-driven approach that requires the definition of at least one region of interest. A region of interest can be any genomic interval defined by the user, and usually takes the form of a gene set. Gene sets should be meaningful to the disease to extract valuable conclusions. There is no restriction in the type or number of regions that can be tested. 
-To annotate regions of interest you might take advantage of the refseq.genes.bed file to generate a regions.of.interest.bed file. For this example we will use as "regions of interest" a list of 279 genes (gene.set.list) known to be associated to developmental disorders. Next you can interrogate is any CNVs are overlapping these regions and generate a mysamples.w.predictor list.  
+To annotate regions of interest you might take advantage of the refseq.genes.bed file to generate a regions.of.interest.bed file. For this example we will use as "regions of interest" a list of 279 genes (gene.set.list) known to be associated to developmental disorders. Next you can interrogate if any CNVs are overlapping these regions and generate a mysamples.w.predictor list.  
 ```
 awk -F"\t" 'BEGIN{OFS="\t"} FNR==NR{p[$4]=$0;next}{print p[$1]}' refseq.genes.bed gene.set.list | sort -V -k1,2 >regions.of.interest.bed
 bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | awk '{print $4"\t1"}' | sort | uniq >mysamples.w.predictor
@@ -201,7 +201,7 @@ bedtools intersect -a mycnvs.final.bed -b regions.of.interest.bed -wa | awk '{pr
 ### Input.
 To carry out a CNV burden analysis you need three variables for every sample included in the gwas:
 1. RESPONSE: binary phenotype (cases=1; controls=0) for all GWAS samples regardless of their cnv state.
-2. PREDICTOR: binary precdictor, in this case if a sample has or not a CNV overlapping a region of interest. We will use mysamples.w.predictor to create the PREDICTOR field.  
+2. PREDICTOR: binary predictor, in this case if a sample has or not a CNV overlapping a region of interest. We will use mysamples.w.predictor to create the PREDICTOR field.  
 3. COVARIABLES (optional): Here you can include sex or principal components.
 
 RESPONSE and COVARIABLES were extracted from STEP1 in the *mysamples* file. Here, the PREDICTOR needs to be construted. We simply map the samples from mysamples.w.predictor file to the last column of *mysamples* and fill in with 0 the samples that do not have the predictor. This way we generate the *sample.wise.input*
@@ -218,7 +218,7 @@ NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
 
 ### Logistic regression
-Having *sample.wise.input* with PREDICTOR annotatated the user can proceed with the logistic regression of the CNV burden analysis. The following commands will test for association between the RESPONSE (i.e. phenotype) and the PREDICTOR (i.e. having a CNV in a region on interest). 
+After creating the *sample.wise.input* file with the PREDICTOR field, the user can proceed with the logistic regression of the CNV burden analysis. The following commands in R will test for association between the RESPONSE (i.e. phenotype) and the PREDICTOR (i.e. having a CNV in a region on interest). 
 
 ```
 #load libraries
