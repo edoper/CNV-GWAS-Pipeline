@@ -157,7 +157,7 @@ sort -V -k1,2 mygwas.good.filtered.cnv.bed >mygwas.good.filtered.cnv.sorted.bed
 ```
 False positive CNVs calls tend to fall within highly repetitive regions such as the centromere, telomer and immunoglobulins regions. Calls overlapping the boundaries of repetitive regions should be removed. Here, we will exclude [repetitive regions](https://github.com/dellytools/delly/blob/master/excludeTemplates/human.hg19.excl.tsv) with bedtools (see repetitive-regions bed file). A single line will exclude undesired CNVs:
 ```
-intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive-regions.bed -v >mycnvs.final.bed
+intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive.regions.bed -v >mycnvs.final.bed
 ```
 This way we obtain our final set of CNV calls mycnv-final.bed. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv.  See example below:
 
