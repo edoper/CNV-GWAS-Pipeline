@@ -12,7 +12,7 @@
 - [R](https://www.r-project.org/)
 - [Python](https://www.python.org/)
 ## Step 1. Quality control procedures.
-For a detailed description of GWAS quality control (QC) procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For simplicity, we asume that the input is on the standard PED and MAP file formats, which can be read by PLINK software.
+For a detailed description of GWAS quality control (QC) procedures please refer to [Anderson *et al*, 2010](https://www.nature.com/articles/nprot.2010.116) and [Clarke *et al*, 2011](https://www.nature.com/articles/nprot.2010.182). The format of genotyping data varies among SNP platforms. For simplicity, we asume that the input is on the standard PED and MAP file formats, which can be processed using the PLINK software.
 We will transform the original data into PLINK BED files **(do not confuse this with UCSC BED format)** to facilitate the analyses of large datasets.
 Remember to make backups of the original data. The command `plink --file <filename>` loads PED and MAP data. The command `plink --bfile <filename>` loads PLINK BED data.
 ```
@@ -25,20 +25,20 @@ It is assumed that discordant sex information between the reported and genotyped
 plink --bfile mygwas --check-sex --out mygwas
 grep PROBLEM mygwas.sexcheck | awk '{print $1,$2}' > toremove.sexcheck.list
 ```
-PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier test. Such a command states:
+PLINK can filter data using multiple parameters. We will filter the data to remove samples with genotype call rate below 0.96 (`--mind 0.04`), SNVs with genotyping rate below 0.98 (`--geno 0.02`), minor allele frequency below 0.05 (`--maf 0.05`) and variants with a significant deviation from Hardy–Weinberg equilibrium (P < 0.001, `--hwe 0.001`). We will also remove the individuals that didn't pass the earlier tests using the following command:
 ```
 plink --bfile mygwas --remove toremove.sexcheck.list --mind 0.04 --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out mygwas.genoQC
 ```
 ### Cohort-level QC
-Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. Below commands will identify relted individuals in mygwas data.  
+Cryptic relatedness and ancestry should be addressed to avoid spurious relationships in the analysis. KING will be used on the PLINK filtered output to identify relatedness in samples up to the second degree. The commands below will identify related individuals in the mygwas dataset.  
 ```
 ## UN = UNrelated
 king -b mygwas.genoQC.bed --related –degree 2 --prefix mygwas.king
 grep -v UN mygwas.king.kin0 | awk '{print $1,$2,$3}' > mygwas.related.list
 ```
-If related individuals are found, check their genotype call rates (`--missing`) and remove the individual with less calling rates.
+If related individuals are found, check their genotype call rates with PLINK (using the `--missing` flag) and remove the individuals with less calling rates.
 
-To assess ancestry, we merge the dataset with another known dataset with clearly-defined populations(`--merge` for non-binary format PLINK files, `--bmerge` for binary format PLINK files), and use PLINK to generate a Principal components analysis (PCA) of the different populations. [1000 genomes](https://www.internationalgenome.org/) is usually used to check for population stratification data.
+To assess ancestry, we merge the dataset with another known dataset with clearly-defined populations(`--merge` for non-binary format PLINK files, `--bmerge` for binary format PLINK files), and use PLINK to generate a Principal Components Analysis (PCA) of the different populations. [1000 genomes](https://www.internationalgenome.org/) is usually used to check for population stratification data.
 ```
 ## To download 1000 genomes data:
 wget ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/release/20100804/ALL.2of4intersection.20100804.genotypes.vcf.gz
@@ -49,13 +49,13 @@ You need to make sure that the files are mergeable, for this there are three thi
 2) Resolve strand isues.
 3) Remove the SNPs which still differ between the datasets.
 
-The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The below command will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
+The [PLINK merge](https://www.cog-genomics.org/plink/1.9/data#merge) manual has guidelines about what should be done if two PLINK binary datasets can not be merged. The command below will merge mygwas with 1000 genomes data and carry out a PCA analysis. 
 ```
 plink --vcf ALL.2of4intersection.20100804.genotypes.vcf.gz --biallelic-only strict --allow-no-sex --geno 0.02 --maf 0.05 --hwe 0.001 --make-bed --out 1000g.ALL
 plink --bfile mygwas.genoQC --bmerge 1000g.ALL --make-bed --out mygwas.merged
 plink --bfile mygwas.merged --pca --out mygwas.merged
 ```
-The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the ancestry of every individual is appended as the last column of the PCA results. The command below in R will plot mygwas individuals alongside 1000 genomes samples. 
+The output (`mygwas.merged.eigenvec`) can be used to plot and identify outliers using R if the reported ancestry of every individual is appended as the last column of the PCA results. The command below in R will plot mygwas individuals alongside 1000 genomes samples. 
 ```
 library(readr)
 mygwas_merged <- read_table2("mygwas.merged.eigenvec", col_names = FALSE)
@@ -63,7 +63,7 @@ library("ggplot2")
 ggplot(data=testbed_merged_genoQC, aes(x=X3,y=X4,group=X23,color=X23)) + geom_point()
 ```
 After filtering outliers, we will require a table with the individual ID, phenotype, sex, and the first three components from the PCA.
-The following Python script can be used to generate this table, with the PLINK fam file and the PLINK eigenvec file as input.
+The following Python script can be used to generate this table, using the PLINK fam file and the PLINK eigenvec file as input.
 ```
 ## Save as pcatablebuilder.py
 ## Usage: python pcatablebuilder.py <fam indlist> <PCA results.eigenvec>
@@ -89,7 +89,7 @@ python pcatablebuilder.py mygwas.fam mygwas.merged.eigenvec > mysamples
 
 ## Step 2. CNV detection and downstream analysis.
 ### CNV detection
-For CNV detection, we strongly recommend to follow the pipeline proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), which uses PennCNV to detect CNVs and R scripts for filtering. The pipeline describes how to install PennCNV, R, and the required R libraries to properly execute the R scripts. The pipeline requires a configuration file.
+For CNV detection, we strongly recommend to follow the pipeline proposed by [Macé et al. 2016](https://academic.oup.com/bioinformatics/article/32/21/3298/2415363), which uses PennCNV to detect CNVs and R scripts for filtering. The pipeline user manual describes how to install PennCNV, R, and the required R libraries to properly execute the R scripts. The pipeline requires a configuration file which should point to the PennCNV path and the datasets that will be analyzed.
 ```
 ## config_example.txt
 pennCNVpath:    /path/to/pennCNV/
@@ -116,7 +116,7 @@ Phenotype:	phenoName
 ```
 ./CNV_detection.sh config_example.txt
 ```
-The PennCNV Pipeline User Guide included in the pipeline describes the complete output, here we highlight two files:
+The PennCNV Pipeline User Guide included in the pipeline describes the complete output, however, the following two files are required to continue with this analysis:
 
 - mygwas.clean.rawcnv contains the ALL detected CNVs
 - mygwas.good.cnv contains the filtered subset of CNVs in PennCNV format and is the main input for downstream analysis.
@@ -159,7 +159,7 @@ False positive CNVs calls tend to fall within highly repetitive regions such as 
 ```
 intersectBed -a mygwas.good.filtered.cnv.sorted.bed -b repetitive.regions.bed -v >mycnvs.final.bed
 ```
-This way we obtain our final set of CNV calls mycnv-final.bed. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv.  See example below:
+The result is a final set of CNV calls mycnv-final.bed. Note that this file contains one cnv per row. If same cnv was called on three samples, three rows will show the same cnv.  See example below:
 
 mycnv-final.bed first three rows: 
 
@@ -183,7 +183,7 @@ Chr | Start | End | Sample | N genes | Gene Names
 1 | 15718470 | 15789733 | NA21304 | 3 | CTRC,EFHD2,CELA2A
 1 | 15894607 | 16000741 | NA18534 | 4 | RSC1A1,AGMAT,DNAJC16,DDI2
 
-For further annotations, you can directly upload the filtered `all-cnv.filtered.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
+For further annotations, you can directly upload the filtered `mycnvs.final.bed` BED file to the Ensembl's variant effect predictor [VEP](https://www.ensembl.org/Tools/VEP) to annotate all relevant biological features. However, for larger annotation procedures a local VEP installation is recommended. [ANNOVAR](https://doc-openbio.readthedocs.io/projects/annovar/en/latest/) or PennCNV can also be used to annotate the dataset.
 
 ## Step 3. Burden analysis.
 
@@ -216,7 +216,7 @@ NA06989 | 1 | 1 | 158886 | 387969 | 146544 | 1
 NA12335 | 0 | 1 | 159503 | 386152 | 140885 | 0
 
 ### Logistic regression
-Having sample.wise.input with PREDICTOR annotatated the user can proceed with the logistic regression of the burden analysis. The following commands will test for association between the RESPONSE (i.e. phenotype) and the PREDICTOR (i.e. having a CNV in a region on interest). 
+Having sample.wise.input with PREDICTOR annotatated the user can proceed with the logistic regression of the burden analysis. The following step will use R to test for association between the RESPONSE (i.e. phenotype) and the PREDICTOR (i.e. having a CNV in a region on interest). 
 
 ```
 #load libraries
@@ -240,7 +240,7 @@ or.ci.mod<-exp(cbind(OR = coef(model.burden), confint(model.burden)))
 main.results<-cbind(p.mod, or.ci.mod)
 main.results
 ```
-Expected results should look like the tabe below: 
+Expected results should look like the table below: 
 
 Variables | p.model | OR | 2.5 % | 97.5 %
 --- | --- | --- | --- | --- 
