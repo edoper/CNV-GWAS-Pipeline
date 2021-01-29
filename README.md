@@ -1,6 +1,6 @@
 # CNVs-from-SNPs-arrays
 
-**CNVs-from-SNPs-arrays** describes a workflow to detect and analyze CNVs out of large-scale SNP genotyping microarrays data. Based on an hypothetical case-control genome wide association (*mygwas.ped* and *mygwas.map*) we describe established CNV quality control procedures and guidelines for CNV detection. In additon, we include example data (i.e. *mygwas.good.cnv*) to carry out CNV downstream analysis and test for association with a CNV burden analysis. The present GitHub repository is associated to the ["Genomic structural variants in nervous system disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
+**CNVs-from-SNPs-arrays** describes a workflow to detect and analyze CNVs out of large-scale SNP genotyping microarrays data. Based on an hypothetical case-control genome wide association (*mygwas.ped* and *mygwas.map*) we describe established CNV quality control procedures and guidelines for CNV detection. In additon, we include example data (i.e. *mygwas.good.cnv*) to carry out CNV downstream analysis and test for association with a CNV burden analysis. The present GitHub repository is associated to the ["Copy number variation analysis from SNP genotyping microarrays in large cohorts of neurological disorders"](https://not.ready.yet) chapter by Eduardo Pérez-Palma *et al* from the Neuromethods book series (2021).
 
 ## Files
 0. *mygwas* (NOT INCLUDED): genotype in PLINK format (mygwas.ped and mygwas.map) and sample-wise microarray intensity files.  
